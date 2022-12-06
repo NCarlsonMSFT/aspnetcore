@@ -432,7 +432,7 @@ public class KestrelConfigurationLoader
             {
                 var certificate = new X509Certificate2(certificatePath, certificateConfig.Password);
 
-                if (IsDevelopmentCertificate(certificate))
+                if (IsValidDevelopmentCertificate(certificate))
                 {
                     return (certificate, certificateConfig);
                 }
@@ -450,9 +450,16 @@ public class KestrelConfigurationLoader
         return (null, null);
     }
 
-    private static bool IsDevelopmentCertificate(X509Certificate2 certificate)
+    private static bool IsValidDevelopmentCertificate(X509Certificate2 certificate)
     {
         if (!string.Equals(certificate.Subject, "CN=localhost", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        DateTimeOffset currentDate = DateTimeOffset.Now;
+        if (certificate.NotBefore > currentDate ||
+            currentDate > certificate.NotAfter)
         {
             return false;
         }
